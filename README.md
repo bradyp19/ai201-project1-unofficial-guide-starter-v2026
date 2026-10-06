@@ -112,11 +112,17 @@ Laundry costs $1.75 wash, $1.75 dry, app-based. On noise: moderate; the building
 <!-- One complete question and answer, pasted as text, with the source line
      visible. Milestone 4. -->
 
-**Question:**
+**Question:** When is the best time to do laundry in Aldridge Hall?
 
 **Answer:**
 
 ```
+$ python app.py ask "When is the best time to do laundry in Aldridge Hall?"
+  (best distance 0.302, cutoff 0.5)
+
+The best time to do laundry in Aldridge Hall is Tuesday or Wednesday morning (housing_aldridge_hall_laundry.txt).
+
+Sources retrieved: housing_aldridge_hall.txt, housing_aldridge_hall_laundry.txt, housing_tamsin_court_laundry.txt
 ```
 
 **My relevance cutoff:**
