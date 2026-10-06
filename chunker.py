@@ -97,7 +97,50 @@ def split_documents(documents: list[Document]) -> list[Chunk]:
       - Would splitting on paragraph breaks keep more thoughts intact than
         splitting on a character count?
     """
-    return fallback_split(documents)
+    import re
+
+    max_len = config.CHUNK_SIZE
+    chunks: list[Chunk] = []
+
+    for doc in documents:
+        text = doc.text.strip()
+        if not text:
+            continue
+
+        # Paragraphs are the natural unit here: title line, then 1-3 short ones.
+        paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+        title = paragraphs[0]
+        body = paragraphs[1:] or []
+
+        # A document that fits stays whole: one post, one thought, one chunk.
+        if len(text) <= max_len:
+            pieces = [text]
+        else:
+            # Oversize doc: break body paragraphs into sentences, pack them
+            # up to max_len, and repeat the title so each piece stands alone.
+            units: list[str] = []
+            for para in body or [title]:
+                units += [s.strip() for s in re.split(r"(?<=[.!?])\s+", para) if s.strip()]
+            pieces, current = [], title
+            for unit in units:
+                if len(current) + 1 + len(unit) > max_len and current != title:
+                    pieces.append(current)
+                    current = title
+                current = f"{current}\n{unit}"
+            if current != title:
+                pieces.append(current)
+
+        for i, piece in enumerate(pieces):
+            chunks.append(
+                Chunk(
+                    text=piece,
+                    source=doc.source,
+                    index=i,
+                    produced_by="chunker.py::split_documents",
+                )
+            )
+
+    return chunks
 
 
 def describe(chunks: list[Chunk]) -> str:
