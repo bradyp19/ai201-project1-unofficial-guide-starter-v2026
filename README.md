@@ -130,6 +130,12 @@ Laundry costs $1.75 wash, $1.75 dry, app-based. On noise: moderate; the building
 
      Milestone 4. -->
 
+I set the cutoff at 0.5. To find it, I wrote `measure_cutoff.py`, which runs my five test questions and the five `OUT_OF_SCOPE` questions through retrieval only (no model calls) and records the best distance for each. The two groups were far apart. My in-corpus questions came back between 0.192 (printing quota) and 0.302 (Aldridge laundry). The out-of-scope ones came back between 0.825 (capital of Mongolia) and 0.934 (diesel engine oil). That leaves a gap of about 0.52, from 0.302 to 0.825.
+
+The middle of the gap is around 0.56, but I went a little lower, to 0.5. A missed out-of-scope question would get a confident answer made up from campus posts, and I think that's worse than refusing a real question. Even at 0.5, my weakest real question (laundry, 0.302) still passes with about 0.2 to spare. The closest out-of-scope question is more than 0.3 above the line. I don't take that big gap too seriously, though. My out-of-scope questions are about things like the World Cup and Rust, which have nothing in common with campus life. A question that's off-topic but campus-adjacent, like "what's the parking fee at the hospital?", would probably land a lot closer.
+
+After setting the number, I noticed the gate only checks the single best chunk. Once a question passed, all four retrieved chunks went to the model, including ones as far as 0.625 (`money_jobs.txt` came back for the dining dollars question). So I added `gate.py::relevant`, which uses the same 0.5 cutoff to drop each chunk that's over it before generation. That removed 6 of the 20 chunks across my five questions. It didn't catch everything: `housing_tamsin_court_laundry.txt` came back at 0.448 for the Aldridge question, which is under the cutoff. In all three runs, the answer cited it as a second source alongside the correct file. Lowering the cutoff to about 0.4 would have removed it, but it would also have removed useful context. That's a tradeoff I'll come back to in unit 2.
+
 | Question | In corpus? | Best distance |
 |---|---|---|
 |  |  |  |
