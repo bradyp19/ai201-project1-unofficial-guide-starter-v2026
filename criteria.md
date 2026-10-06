@@ -23,8 +23,7 @@ For at least 4 of my 5 test questions, the retrieved chunks include one that
 contains the answer.
 
 **Why this target:**
-<!-- e.g. "One of my questions is about a topic only two documents mention, so
-     I expect that one to be hard." -->
+My documents are short (~317 characters), and each of my five questions is answered by one sentence in one document, so retrieval should usually hit. But the corpus has near-duplicates (seven dining halls, seven dorms with parallel laundry/noise posts, and CS/BIOL/ECON course posts), so one question can pull the wrong sibling. Allowing one miss covers that; 5 of 5 would be too strict for embeddings that confuse similar-sounding documents.
 
 ---
 
@@ -33,8 +32,7 @@ contains the answer.
 Every answer the system produces names at least one source document.
 
 **Why this target:**
-<!-- Why all five and not four? What about your setup makes that achievable —
-     or what would have to go wrong for it not to be? -->
+Source names come from retrieval metadata, not from the model's memory, so attribution is mechanical and I expect all five. If it fails, it means the generation prompt or source line is broken, not that the question was hard, so I see no reason to allow a miss.
 
 ---
 
@@ -50,28 +48,16 @@ in at least 4 of 5 tries.
      just keep five of them, or the "4 of 5" above has nothing to be 4 of. -->
 
 **Why this target:**
-<!-- What did your distances look like when you set the cutoff in Milestone 4?
-     Was there a clean gap, or did the two groups overlap? -->
+My out-of-scope questions (Mongolia, diesel engines, World Cup, ibuprofen, Rust) share no vocabulary with campus life, so I expect a clear distance gap. One miss is allowed because short posts embed loosely and a generic question could land just under the cutoff. (To be updated with the actual distances in Milestone 4.)
 
 ---
 
 ## 4. Something about your chunks
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know if your chunks were the right size? Name something
-     countable or observable.
-
-     Examples of the right shape — don't copy these, they should come from
-     what you actually saw in Milestone 3:
-       - "At least 4 of 5 sampled chunks read as a complete thought, with no
-          sentence cut in half at either end."
-       - "No chunk is shorter than 200 characters, since anything below that
-          in my corpus turned out to be a heading with no content under it." -->
-
-
+In `python app.py chunks -n 5`, at least 4 of 5 sampled chunks must read as a complete thought, with no sentence cut in half at either end, and no chunk may be just a title line (e.g. "On the printing quota") with no content under it.
 
 **Why this target:**
+Most of my documents are a title line plus one to three sentences, and the answer often sits in a single sentence (e.g. "$30 ... roughly 600 black-and-white pages"). A chunk boundary through that sentence would separate a figure from what it describes. A title-only chunk would embed as a topic with no facts. Both are observable by reading five chunks.
 
 
 
@@ -79,17 +65,10 @@ in at least 4 of 5 tries.
 
 ## 5. Your choice
 
-<!-- YOU WRITE THIS ONE TOO.
-
-     Pick something you actually care about getting right. It could be about
-     speed, about refusals, about a particular kind of question your corpus
-     handles badly, about source attribution being correct rather than merely
-     present — anything, as long as it names a number or an observable
-     outcome. -->
-
-
+For at least 4 of my 5 test questions, the source named in the answer is the document that actually contains the `expects` text (e.g. the printing question cites `admin_printing_quota.txt`), not merely some retrieved document.
 
 **Why this target:**
+Criterion 2 only checks that a source is present. With near-duplicate documents (seven laundry posts, seven dining halls), a system can answer correctly yet cite the wrong sibling, which would mislead a student checking the claim. I allow one miss for the same sibling-confusion reason as criterion 1.
 
 
 
