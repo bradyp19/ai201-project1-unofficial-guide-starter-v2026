@@ -63,6 +63,10 @@ def run_once(question: str, top_k, threshold, corpus, variant):
     if not decision.passed:
         return gate.REFUSAL, results, decision
 
+    # Only chunks under the cutoff go to the model, and only they are logged
+    # as sources, so the run log shows exactly what generation saw.
+    results = gate.relevant(results, threshold=threshold)
+
     # cache=False on purpose. Three runs have to be three real answers.
     answer = answer_from_chunks(question, results, cache=False)
     return answer, results, decision
