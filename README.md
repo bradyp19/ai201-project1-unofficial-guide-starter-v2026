@@ -27,10 +27,14 @@
 
      Milestone 5. -->
 
+This answers questions about campus life using `campus_life`, a corpus of 88 short student posts. Most of them cover courses, housing, admin rules and dining halls, with a few on money, transit and study spaces. You can ask specific things like how long the lunch line is at Kestrel Commons, when the drop deadline is, or when the laundry room in a particular dorm is empty. Every answer names the post it came from. If nothing in the corpus is close enough to the question, it says "I don't have enough information about that" instead of guessing.
+
 ## Chunking Strategy
 
-**Chunk size:**
-**Overlap:**
+**Chunk size:** 600 characters (maximum)
+**Overlap:** 0
+
+My posts are short. All 88 are between 178 and 549 characters, and the median is 309. Most are a title line plus one to three short paragraphs, and the answer usually sits in a single sentence, like "$30 ... roughly 600 black-and-white pages." With the starter's 800-character windows, nothing would have been cut anyway, but a fixed window has no idea where a sentence ends. So I rewrote `split_documents` to keep each post whole if it fits under 600 characters. I picked 600 because it's just above my longest post. If a post is ever longer, the function splits it at paragraph and sentence boundaries and repeats the title on each piece, so no chunk is just a heading. Since nothing gets cut, there's nothing to overlap, so overlap is 0. The result is 88 posts and 88 chunks, averaging 317 characters.
 
 <!-- What about YOUR documents made you pick these numbers? Short posts and
      long sectioned guides don't want the same chunking, and "800 seemed
@@ -138,13 +142,22 @@ Sources retrieved: housing_aldridge_hall.txt, housing_aldridge_hall_laundry.txt,
 
 I set the cutoff at 0.5. To find it, I wrote `measure_cutoff.py`, which runs my five test questions and the five `OUT_OF_SCOPE` questions through retrieval only (no model calls) and records the best distance for each. The two groups were far apart. My in-corpus questions came back between 0.192 (printing quota) and 0.302 (Aldridge laundry). The out-of-scope ones came back between 0.825 (capital of Mongolia) and 0.934 (diesel engine oil). That leaves a gap of about 0.52, from 0.302 to 0.825.
 
-The middle of the gap is around 0.56, but I went a little lower, to 0.5. A missed out-of-scope question would get a confident answer made up from campus posts, and I think that's worse than refusing a real question. Even at 0.5, my weakest real question (laundry, 0.302) still passes with about 0.2 to spare. The closest out-of-scope question is more than 0.3 above the line. I don't take that big gap too seriously, though. My out-of-scope questions are about things like the World Cup and Rust, which have nothing in common with campus life. A question that's off-topic but campus-adjacent, like "what's the parking fee at the hospital?", would probably land a lot closer.
+The middle of the gap is around 0.56, but I went a little lower, to 0.5. A missed out-of-scope question would get a confident answer made up from campus posts, and I think that's worse than refusing a real question. Even at 0.5, my weakest real question (laundry, 0.302) still passes with about 0.2 to spare. The closest out-of-scope question is more than 0.3 above the line. I don't take that big gap too seriously, though. My out-of-scope questions are about things like the World Cup and Rust, which have nothing in common with campus life. To test that, I ran an off-topic question that sounds like it belongs on campus, "What's the parking fee at the hospital?" It came back at 0.644, much closer than anything in my out-of-scope set (0.825 and up) but still well over 0.5, so the gate refused it. That's still a good margin, but it's 0.18 closer than my five easy out-of-scope questions suggested.
 
-After setting the number, I noticed the gate only checks the single best chunk. Once a question passed, all four retrieved chunks went to the model, including ones as far as 0.625 (`money_jobs.txt` came back for the dining dollars question). So I added `gate.py::relevant`, which uses the same 0.5 cutoff to drop each chunk that's over it before generation. That removed 6 of the 20 chunks across my five questions. It didn't catch everything: `housing_tamsin_court_laundry.txt` came back at 0.448 for the Aldridge question, which is under the cutoff. In all three runs, the answer cited it as a second source alongside the correct file. Lowering the cutoff to about 0.4 would have removed it, but it would also have removed useful context. That's a tradeoff I'll come back to in unit 2.
+After setting the number, I noticed the gate only checks the single best chunk. Once a question passed, all four retrieved chunks went to the model, including ones as far as 0.625 (`money_jobs.txt` came back for the dining dollars question). So I had Claude add `gate.py::relevant`, which uses the same 0.5 cutoff to drop each chunk that's over it before generation. That removed 6 of the 20 chunks across my five questions. It didn't catch everything: `housing_tamsin_court_laundry.txt` came back at 0.448 for the Aldridge question, which is under the cutoff. In all three runs, the answer cited it as a second source alongside the correct file. Lowering the cutoff to about 0.4 would have removed it, but it would also have removed useful context. That's a tradeoff I'll come back to in unit 2.
 
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| Roughly how many black-and-white pages does the $30 semester printing quota cover? | yes | 0.192 |
+| How long is the wait at Kestrel Commons between 12:15 and 1:00? | yes | 0.213 |
+| Through which week can I drop a course, and what shows on my transcript if I drop after week two? | yes | 0.230 |
+| What happens to leftover dining dollars at the end of the spring semester? | yes | 0.230 |
+| When is the best time to do laundry in Aldridge Hall? | yes | 0.302 |
+| What is the capital of Mongolia? | no | 0.825 |
+| What is the recommended dosage of ibuprofen for a headache? | no | 0.844 |
+| Who won the 1994 World Cup? | no | 0.886 |
+| How do I write a for loop in Rust? | no | 0.896 |
+| How do I change the oil in a diesel engine? | no | 0.934 |
 
 ## How I Used AI
 
@@ -157,9 +170,9 @@ After setting the number, I noticed the gate only checks the single best chunk. 
 
      Milestone 5. -->
 
-**1.**
+**1.** Instead of just asking for a filter, I had Claude read my README, criteria, questions, chunker and config first. I told it what I'd already done (THRESHOLD set to 0.5 from measured distances) and gave it one scoped next step: filter retrieved chunks by distance, then run the `before` eval. Because it had my criteria, it checked the results against them and caught that the Aldridge laundry answer cited a different dorm's post in all three runs. That's the sibling confusion my criterion 5 predicted. I kept 0.5 and wrote it down as a criterion 5 problem instead of tuning the cutoff until it went away.
 
-**2.**
+**2.** I asked Claude to write my cutoff explanation from what we'd already worked out, in my own voice. Its draft included a guess, marked as untested, that a question that sounds campus-related but isn't, like "What's the parking fee at the hospital?", would land much closer than my out-of-scope set. I didn't want an untested claim in my README, so I ran it myself. It came back at 0.644: closer than any of my out-of-scope questions, but still refused at 0.5. I replaced the guess with that number.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
