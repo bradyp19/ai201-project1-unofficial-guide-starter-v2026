@@ -56,3 +56,17 @@ def check(results: list[Result], threshold: float | None = None) -> GateDecision
 
     best = min(r.distance for r in results)
     return GateDecision(passed=best < threshold, best_distance=best, threshold=threshold)
+
+
+def relevant(results: list[Result], threshold: float | None = None) -> list[Result]:
+    """
+    Keep only the chunks that are themselves under the cutoff.
+
+    `check` looks at the best chunk alone, so once a question passes, every
+    top-k chunk would otherwise reach the model — including ones far past the
+    cutoff. Those are the chunks most likely to be a wrong sibling document,
+    so they are dropped here before generation. The best chunk always survives
+    a passed gate, so this never empties the list for an answered question.
+    """
+    threshold = config.THRESHOLD if threshold is None else threshold
+    return [r for r in results if r.distance < threshold]

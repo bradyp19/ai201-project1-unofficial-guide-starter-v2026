@@ -226,6 +226,7 @@ def ask_pipeline(
         outcome["answer"] = gate.REFUSAL
         return outcome
 
+    results = gate.relevant(results, threshold=threshold)
     prompt = build_prompt(question, results)
     if on_prompt is not None:
         on_prompt(prompt)

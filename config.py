@@ -34,7 +34,7 @@ CHUNK_OVERLAP = 0       # unused by split_documents: posts stay whole, so nothin
 
 # ─── Retrieval (Milestone 4) ─────────────────────────────────────────────────
 
-TOP_K = 5               # how many chunks to pull back per question
+TOP_K = 4               # enough coverage without adding the weakest distractor
 
 # The relevance gate. If the best chunk is further away than this, the system
 # refuses to answer instead of handing the model thin material.
@@ -44,7 +44,7 @@ TOP_K = 5               # how many chunks to pull back per question
 # 0.6 is a reasonable starting point, not a right answer. Milestone 4 has you
 # measure your own two groups of distances and put the cutoff in the gap.
 # Most corpora land somewhere between 0.45 and 0.75.
-THRESHOLD = 0.6
+THRESHOLD = 0.5   # measured: in-corpus best 0.192-0.302, out-of-scope best 0.825-0.934
 
 
 # ─── Models ──────────────────────────────────────────────────────────────────
