@@ -2,30 +2,11 @@
 
 Brady Park, campus_life
 
-> **This file is your submission.** Fill it in as you go — most sections get
-> written during the milestone that produces them, not at the end.
->
-> How the starter works, and every command you'll need, is in `RUNNING.md`.
-> Leave that file alone.
->
-> **Paste everything as text.** No screenshots, no video. A typed table gets
-> full credit; a picture of the same table gets none.
->
-> Delete these instruction blocks as you replace them. The `<!-- -->` comments
-> are notes to you and don't show up when the page renders — you can leave them
-> or remove them.
-
 ---
 
 # Unit 1
 
 ## What This Does
-
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
 
 This answers questions about campus life using `campus_life`, a corpus of 88 short student posts. Most of them cover courses, housing, admin rules and dining halls, with a few on money, transit and study spaces. You can ask specific things like how long the lunch line is at Kestrel Commons, when the drop deadline is, or when the laundry room in a particular dorm is empty. Every answer names the post it came from. If nothing in the corpus is close enough to the question, it says "I don't have enough information about that" instead of guessing.
 
@@ -36,26 +17,7 @@ This answers questions about campus life using `campus_life`, a corpus of 88 sho
 
 My posts are short. All 88 are between 178 and 549 characters, and the median is 309. Most are a title line plus one to three short paragraphs, and the answer usually sits in a single sentence, like "$30 ... roughly 600 black-and-white pages." With the starter's 800-character windows, nothing would have been cut anyway, but a fixed window has no idea where a sentence ends. So I rewrote `split_documents` to keep each post whole if it fits under 600 characters. I picked 600 because it's just above my longest post. If a post is ever longer, the function splits it at paragraph and sentence boundaries and repeats the title on each piece, so no chunk is just a heading. Since nothing gets cut, there's nothing to overlap, so overlap is 0. The result is 88 posts and 88 chunks, averaging 317 characters.
 
-<!-- What about YOUR documents made you pick these numbers? Short posts and
-     long sectioned guides don't want the same chunking, and "800 seemed
-     reasonable" earns nothing. Point at something you noticed when you read
-     the documents in Milestone 1.
-
-     If you changed your mind partway through, say so and say why. That's worth
-     more than pretending you got it right first time.
-
-     Milestone 3. -->
-
 ## Sample Chunks
-
-<!-- Five chunks, pasted as text. Label each one and name the file it came from
-     AND the function that produced it — the grader checks your code against
-     what you claim here.
-
-     `python app.py chunks -n 5` prints all three for you. Copy them straight
-     across.
-
-     Milestone 3. -->
 
 **Chunk 1** — source: `admin_add_drop_deadline.txt#0` — produced by: `chunker.py::split_documents`
 
@@ -113,8 +75,6 @@ Laundry costs $1.75 wash, $1.75 dry, app-based. On noise: moderate; the building
 
 ## Sample Answer
 
-<!-- One complete question and answer, pasted as text, with the source line
-     visible. Milestone 4. -->
 
 **Question:** When is the best time to do laundry in Aldridge Hall?
 
@@ -130,15 +90,6 @@ Sources retrieved: housing_aldridge_hall.txt, housing_aldridge_hall_laundry.txt,
 ```
 
 **My relevance cutoff:**
-
-<!-- The number you set in config.py, and how you got there.
-
-     You ran five questions your corpus covers and the five in OUT_OF_SCOPE
-     that it clearly doesn't, and wrote down the best distance for each. What
-     did those two groups look like? Where was the gap? Put the actual numbers
-     here — the table below wants all ten rows.
-
-     Milestone 4. -->
 
 I set the cutoff at 0.5. To find it, I wrote `measure_cutoff.py`, which runs my five test questions and the five `OUT_OF_SCOPE` questions through retrieval only (no model calls) and records the best distance for each. The two groups were far apart. My in-corpus questions came back between 0.192 (printing quota) and 0.302 (Aldridge laundry). The out-of-scope ones came back between 0.825 (capital of Mongolia) and 0.934 (diesel engine oil). That leaves a gap of about 0.52, from 0.302 to 0.825.
 
@@ -161,25 +112,11 @@ After setting the number, I noticed the gate only checks the single best chunk. 
 
 ## How I Used AI
 
-<!-- Two specific moments. For each: what you asked for, what came back, and
-     what you changed about it.
-
-     "I asked Claude to write the chunking function from my notes. It ignored
-     the overlap, so I added that myself" is the level of detail we're after.
-     "I used AI to help me code" is not.
-
-     Milestone 5. -->
-
 **1.** Instead of just asking for a filter, I had Claude read my README, criteria, questions, chunker and config first. I told it what I'd already done (THRESHOLD set to 0.5 from measured distances) and gave it one scoped next step: filter retrieved chunks by distance, then run the `before` eval. Because it had my criteria, it checked the results against them and caught that the Aldridge laundry answer cited a different dorm's post in all three runs. That's the sibling confusion my criterion 5 predicted. I kept 0.5 and wrote it down as a criterion 5 problem instead of tuning the cutoff until it went away.
 
 **2.** I asked Claude to write my cutoff explanation from what we'd already worked out, in my own voice. Its draft included a guess, marked as untested, that a question that sounds campus-related but isn't, like "What's the parking fee at the hospital?", would land much closer than my out-of-scope set. I didn't want an untested claim in my README, so I ran it myself. It came back at 0.644: closer than any of my out-of-scope questions, but still refused at 0.5. I replaced the guess with that number.
 
-<!-- ── Stretch features ─────────────────────────────────────────────────────
-     Doing one? Say so here BEFORE you start. A feature this README never
-     claims earns nothing.
-     ───────────────────────────────────────────────────────────────────────── -->
-
----
+----
 
 # Unit 2
 
